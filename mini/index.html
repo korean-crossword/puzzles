@@ -105,28 +105,35 @@
     document.querySelectorAll('.cell input')
   );
 
+  const JAMO = [
+    "ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ",
+    "ㅏ","ㅑ","ㅓ","ㅕ","ㅗ","ㅛ","ㅜ","ㅠ","ㅡ","ㅣ"
+  ];
+
   inputs.forEach((input, index) => {
 
-    input.addEventListener('input', () => {
-      if (input.value.length === 1) {
-        const next = inputs[index + 1];
-        if (next) {
-          next.focus();
-        }
-      }
-    });
-
     input.addEventListener('keydown', (e) => {
-      if (e.key === 'Backspace' && input.value === '') {
+      e.preventDefault(); // 기본 입력 차단
+
+      // Backspace
+      if (e.key === 'Backspace') {
+        input.value = '';
         const prev = inputs[index - 1];
-        if (prev) {
-          prev.focus();
-        }
+        if (prev) prev.focus();
+        return;
+      }
+
+      // 허용된 자모만
+      if (JAMO.includes(e.key)) {
+        input.value = e.key;
+        const next = inputs[index + 1];
+        if (next) next.focus();
       }
     });
 
   });
 </script>
+
 
 </body>
 </html>
