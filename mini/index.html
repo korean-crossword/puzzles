@@ -93,7 +93,9 @@
         input.maxLength = 1;
 
         input.addEventListener('keydown', (e) => {
-          e.preventDefault();
+  if (e.repeat) return;   // ★ 이 줄 추가
+  e.preventDefault();
+
 
           const index = inputs.indexOf(input);
 
