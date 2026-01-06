@@ -53,6 +53,11 @@
     .cell input:focus {
       background: #e6f0ff;
     }
+    
+    .cell.highlight input {
+      background: #cfe3ff;
+    }
+
   </style>
 </head>
 <body>
@@ -70,6 +75,9 @@
     [1, 1, 1, 0, 0],
     [1, 0, 1, 1, 1],
   ];
+
+  const ROWS = 5;
+  const COLS = 5;
 
   const grid = document.getElementById('grid');
 
@@ -93,47 +101,72 @@
     });
   });
 
+  const cells = Array.from(document.querySelectorAll('.cell'));
   const inputs = Array.from(document.querySelectorAll('.cell input'));
 
   /* ===== 3. NYT 방향 상태 ===== */
-  let direction = 'across';        // 'across' | 'down'
+  let direction = 'across';
   let lastFocusedInput = null;
 
-  /* ===== 4. 입력 & 클릭 처리 ===== */
+  /* ===== 4. 하이라이트 유틸 ===== */
+  function clearHighlights() {
+    cells.forEach(cell => cell.classList.remove('highlight'));
+  }
+
+  function highlightWord(startIndex) {
+    clearHighlights();
+
+    let row = Math.floor(startIndex / COLS);
+    let col = startIndex % COLS;
+
+    // 시작점 찾기
+    if (direction === 'across') {
+      while (col > 0 && gridData[row][col - 1] === 1) {
+        col--;
+      }
+      // 오른쪽으로 하이라이트
+      while (col < COLS && gridData[row][col] === 1) {
+        cells[row * COLS + col].classList.add('highlight');
+        col++;
+      }
+    } else {
+      while (row > 0 && gridData[row - 1][col] === 1) {
+        row--;
+      }
+      // 아래로 하이라이트
+      while (row < ROWS && gridData[row][col] === 1) {
+        cells[row * COLS + col].classList.add('highlight');
+        row++;
+      }
+    }
+  }
+
+  /* ===== 5. 입력 & 클릭 처리 ===== */
   inputs.forEach((input, index) => {
 
-    /* --- NYT식 클릭 → 방향 전환 --- */
     input.addEventListener('click', () => {
       if (lastFocusedInput === input) {
         direction = (direction === 'across') ? 'down' : 'across';
       }
       lastFocusedInput = input;
 
-      console.log('direction:', direction);
+      highlightWord(index);
     });
 
-    /* --- 입력 처리 --- */
     input.addEventListener('beforeinput', (e) => {
       e.preventDefault();
 
-      // Backspace
       if (e.inputType === 'deleteContentBackward') {
         input.value = '';
-        const prev = inputs[index - 1];
-        if (prev) prev.focus();
         return;
       }
 
       const char = e.data;
-      if (!char) return;
+      if (!char || char.length !== 1) return;
 
-      // 한 글자만 허용 (ㅐ, ㅔ 포함)
-      if (char.length !== 1) return;
-
-      // NYT 방식: 기존 값 덮어쓰기
       input.value = char;
 
-      // (다음 단계에서 direction 기준 이동으로 바꿀 예정)
+      // (다음 단계에서 direction 기준 이동으로 개선)
       const next = inputs[index + 1];
       if (next) {
         requestAnimationFrame(() => next.focus());
