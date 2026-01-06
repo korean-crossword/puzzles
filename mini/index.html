@@ -121,7 +121,8 @@ input.addEventListener('beforeinput', (e) => {
   const next = inputs[index + 1];
   if (next) {
     requestAnimationFrame(() => next.focus());
-  }
+    }
+  });
 });
 </script>
 
