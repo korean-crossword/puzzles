@@ -102,31 +102,32 @@
 
   inputs.forEach((input, index) => {
 
-    input.addEventListener('keydown', (e) => {
-      // IME / 기본 입력 완전 차단
-      e.preventDefault();
+input.addEventListener('keydown', (e) => {
+  e.preventDefault();
 
-      // Backspace
-      if (e.key === 'Backspace') {
-        input.value = '';
-        const prev = inputs[index - 1];
-        if (prev) prev.focus();
-        return;
-      }
+  // Backspace
+  if (e.key === 'Backspace') {
+    input.value = '';
+    const prev = inputs[index - 1];
+    if (prev) prev.focus();
+    return;
+  }
 
-      // 자모만 허용
-      if (JAMO.includes(e.key)) {
-        input.value = e.key;
+  if (JAMO.includes(e.key)) {
+    input.value = e.key;
 
-        const next = inputs[index + 1];
-        if (next) {
-          // 다음 이벤트 루프로 이동 (잔상 방지)
-          setTimeout(() => next.focus(), 0);
-        }
-      }
-    });
+    // ★ 핵심: 현재 input을 즉시 blur
+    input.blur();
 
-  });
+    const next = inputs[index + 1];
+    if (next) {
+      requestAnimationFrame(() => {
+        next.focus();
+      });
+    }
+  }
+});
+
 </script>
 
 
