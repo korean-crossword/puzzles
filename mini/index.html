@@ -62,77 +62,62 @@
 
   <h1>Mini Crossword</h1>
 
-  <div class="grid">
+  <div class="grid" id="grid"></div>
 
-    <!-- 1행 -->
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell block"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-
-    <!-- 2행 -->
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell block"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-
-    <!-- 3행 -->
-    <div class="cell block"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-
-    <!-- 4행 -->
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell block"></div>
-    <div class="cell block"></div>
-
-    <!-- 5행 -->
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell block"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-    <div class="cell"><input maxlength="1"></div>
-
-  </div>
 <script>
-  const inputs = Array.from(
-    document.querySelectorAll('.cell input')
-  );
+  const gridData = [
+    [1, 1, 0, 1, 1],
+    [1, 1, 0, 1, 1],
+    [0, 1, 1, 1, 1],
+    [1, 1, 1, 0, 0],
+    [1, 0, 1, 1, 1],
+  ];
 
   const JAMO = [
     "ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ",
     "ㅏ","ㅑ","ㅓ","ㅕ","ㅗ","ㅛ","ㅜ","ㅠ","ㅡ","ㅣ"
   ];
 
-  inputs.forEach((input, index) => {
+  const grid = document.getElementById('grid');
+  const inputs = [];
 
-    input.addEventListener('keydown', (e) => {
-      e.preventDefault(); // 기본 입력 차단
+  gridData.forEach(row => {
+    row.forEach(cell => {
+      const div = document.createElement('div');
+      div.className = 'cell';
 
-      // Backspace
-      if (e.key === 'Backspace') {
-        input.value = '';
-        const prev = inputs[index - 1];
-        if (prev) prev.focus();
-        return;
+      if (cell === 0) {
+        div.classList.add('block');
+      } else {
+        const input = document.createElement('input');
+        input.maxLength = 1;
+
+        input.addEventListener('keydown', (e) => {
+          e.preventDefault();
+
+          const index = inputs.indexOf(input);
+
+          if (e.key === 'Backspace') {
+            input.value = '';
+            if (inputs[index - 1]) inputs[index - 1].focus();
+            return;
+          }
+
+          if (JAMO.includes(e.key)) {
+            input.value = e.key;
+            if (inputs[index + 1]) inputs[index + 1].focus();
+          }
+        });
+
+        div.appendChild(input);
+        inputs.push(input);
       }
 
-      // 허용된 자모만
-      if (JAMO.includes(e.key)) {
-        input.value = e.key;
-        const next = inputs[index + 1];
-        if (next) next.focus();
-      }
+      grid.appendChild(div);
     });
-
   });
 </script>
+
 
 
 </body>
