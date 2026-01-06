@@ -99,16 +99,24 @@
 
           const index = inputs.indexOf(input);
 
-          if (e.key === 'Backspace') {
-            input.value = '';
-            if (inputs[index - 1]) inputs[index - 1].focus();
-            return;
-          }
+if (e.key === 'Backspace') {
+  input.value = '';
+  const prev = inputs[index - 1];
+  if (prev) {
+    setTimeout(() => prev.focus(), 0);
+  }
+  return;
+}
+
 
           if (JAMO.includes(e.key)) {
-            input.value = e.key;
-            if (inputs[index + 1]) inputs[index + 1].focus();
-          }
+  input.value = e.key;
+  const next = inputs[index + 1];
+  if (next) {
+    setTimeout(() => next.focus(), 0); // ★ 여기
+  }
+}
+
         });
 
         div.appendChild(input);
