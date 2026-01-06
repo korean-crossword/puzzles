@@ -73,59 +73,39 @@
     [1, 0, 1, 1, 1],
   ];
 
+  <script>
+  const inputs = Array.from(
+    document.querySelectorAll('.cell input')
+  );
+
   const JAMO = [
     "ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ",
     "ㅏ","ㅑ","ㅓ","ㅕ","ㅗ","ㅛ","ㅜ","ㅠ","ㅡ","ㅣ"
   ];
 
-  const grid = document.getElementById('grid');
-  const inputs = [];
+  inputs.forEach((input, index) => {
 
-  gridData.forEach(row => {
-    row.forEach(cell => {
-      const div = document.createElement('div');
-      div.className = 'cell';
+    input.addEventListener('keydown', (e) => {
+      e.preventDefault(); // 기본 입력 차단
 
-      if (cell === 0) {
-        div.classList.add('block');
-      } else {
-        const input = document.createElement('input');
-        input.maxLength = 1;
-
-        input.addEventListener('keydown', (e) => {
-  if (e.repeat) return;   // ★ 이 줄 추가
-  e.preventDefault();
-
-
-          const index = inputs.indexOf(input);
-
-if (e.key === 'Backspace') {
-  input.value = '';
-  const prev = inputs[index - 1];
-  if (prev) {
-    setTimeout(() => prev.focus(), 0);
-  }
-  return;
-}
-
-
-          if (JAMO.includes(e.key)) {
-  input.value = e.key;
-  const next = inputs[index + 1];
-  if (next) {
-    setTimeout(() => next.focus(), 0); // ★ 여기
-  }
-}
-
-        });
-
-        div.appendChild(input);
-        inputs.push(input);
+      // Backspace
+      if (e.key === 'Backspace') {
+        input.value = '';
+        const prev = inputs[index - 1];
+        if (prev) prev.focus();
+        return;
       }
 
-      grid.appendChild(div);
+      // 허용된 자모만
+      if (JAMO.includes(e.key)) {
+        input.value = e.key;
+        const next = inputs[index + 1];
+        if (next) next.focus();
+      }
     });
+
   });
+
 </script>
 
 
