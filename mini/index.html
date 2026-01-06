@@ -86,7 +86,6 @@
         input.maxLength = 1;
         input.autocomplete = 'off';
         input.spellcheck = false;
-        input.inputMode = 'none'; // 모바일 키보드 방지
         div.appendChild(input);
       }
 
@@ -94,38 +93,43 @@
     });
   });
 
-  /* ===== 3. 입력 처리 ===== */
   const inputs = Array.from(document.querySelectorAll('.cell input'));
 
+  /* ===== 3. 입력 제어 ===== */
   inputs.forEach((input, index) => {
-    input.addEventListener('keydown', (e) => {
 
-      /* 🔒 두 번 입력 / 잔상 방지 */
-      if (e.repeat) return;
-      e.preventDefault();
+    input.addEventListener('beforeinput', (e) => {
+      e.preventDefault(); // 🔒 IME 포함 모든 기본 입력 차단
 
-      /* ← 백스페이스 */
-      if (e.key === 'Backspace') {
+      // Backspace
+      if (e.inputType === 'deleteContentBackward') {
         input.value = '';
         const prev = inputs[index - 1];
         if (prev) prev.focus();
         return;
       }
 
-      /* 🔹 허용: 단일 자모만 (ㅐ, ㅔ 제외) */
-      const isSingleJamo = /^[ㄱ-ㅎㅏ-ㅣ]$/.test(e.key);
-      const isBlocked = (e.key === 'ㅐ' || e.key === 'ㅔ');
+      // 허용: 단일 한글 자모만
+      const char = e.data;
+      if (!char) return;
 
-      if (isSingleJamo && !isBlocked) {
-        input.value = e.key;
+      const isSingleJamo = /^[ㄱ-ㅎㅏ-ㅣ]$/.test(char);
 
-        const next = inputs[index + 1];
-        if (next) {
-          // 다음 프레임에서 이동 → 잔상 방지
-          requestAnimationFrame(() => next.focus());
-        }
+      // ❌ 겹모음 차단
+      if (!isSingleJamo) return;
+      if (char === 'ㅐ' || char === 'ㅔ') return;
+
+      // 이미 값이 있으면 무시 (마지막 칸 2번 입력 방지)
+      if (input.value !== '') return;
+
+      input.value = char;
+
+      const next = inputs[index + 1];
+      if (next) {
+        requestAnimationFrame(() => next.focus());
       }
     });
+
   });
 </script>
 
