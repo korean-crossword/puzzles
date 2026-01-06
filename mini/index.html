@@ -108,6 +108,37 @@
   let direction = 'across';
   let lastFocusedInput = null;
 
+  /* ===== 3-2. 자동 이동 유틸 ===== */
+function getNextCellIndex(cellIndex) {
+  const row = Math.floor(cellIndex / COLS);
+  const col = cellIndex % COLS;
+
+  let nextRow = row;
+  let nextCol = col;
+
+  if (direction === 'across') {
+    nextCol++;
+  } else {
+    nextRow++;
+  }
+
+  // 범위 밖
+  if (
+    nextRow < 0 || nextRow >= ROWS ||
+    nextCol < 0 || nextCol >= COLS
+  ) {
+    return null;
+  }
+
+  // block
+  if (gridData[nextRow][nextCol] === 0) {
+    return null;
+  }
+
+  return nextRow * COLS + nextCol;
+}
+
+
   /* ===== 4. 하이라이트 유틸 ===== */
   function clearHighlights() {
     cells.forEach(cell => cell.classList.remove('highlight'));
@@ -155,27 +186,36 @@
 
     });
 
-    input.addEventListener('beforeinput', (e) => {
-      e.preventDefault();
+input.addEventListener('beforeinput', (e) => {
+  e.preventDefault();
 
-      if (e.inputType === 'deleteContentBackward') {
-        input.value = '';
-        return;
-      }
+  // Backspace (지금은 이동 안 함, 다음 단계에서 개선)
+  if (e.inputType === 'deleteContentBackward') {
+    input.value = '';
+    return;
+  }
 
-      const char = e.data;
-      if (!char || char.length !== 1) return;
+  const char = e.data;
+  if (!char || char.length !== 1) return;
 
-      input.value = char;
+  // 글자 입력 (덮어쓰기)
+  input.value = char;
 
-      // (다음 단계에서 direction 기준 이동으로 개선)
-      const next = inputs[index + 1];
-      if (next) {
-        requestAnimationFrame(() => next.focus());
-      }
-    });
+  // ⭐ direction 기준 자동 이동
+  const cellIndex = cells.indexOf(input.parentElement);
+  const nextCellIndex = getNextCellIndex(cellIndex);
 
-  });
+  if (nextCellIndex !== null) {
+    const nextCell = cells[nextCellIndex];
+    const nextInput = nextCell.querySelector('input');
+    if (nextInput) {
+      requestAnimationFrame(() => nextInput.focus());
+      highlightWord(nextCellIndex);
+    }
+  }
+});
+
+});
 </script>
 
 
