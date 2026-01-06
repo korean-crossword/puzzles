@@ -62,35 +62,73 @@
   <div class="grid" id="grid"></div>
 
   <script>
-    // 1 = 입력 칸, 0 = 블록
-    const gridData = [
-      [1, 1, 0, 1, 1],
-      [1, 1, 0, 1, 1],
-      [0, 1, 1, 1, 1],
-      [1, 1, 1, 0, 0],
-      [1, 0, 1, 1, 1],
-    ];
+  const gridData = [
+    [1, 1, 0, 1, 1],
+    [1, 1, 0, 1, 1],
+    [0, 1, 1, 1, 1],
+    [1, 1, 1, 0, 0],
+    [1, 0, 1, 1, 1],
+  ];
 
-    const grid = document.getElementById('grid');
+  const grid = document.getElementById('grid');
 
-    // 격자 생성
-    gridData.forEach(row => {
-      row.forEach(cell => {
-        const div = document.createElement('div');
-        div.className = 'cell';
+  // 격자 생성
+  gridData.forEach(row => {
+    row.forEach(cell => {
+      const div = document.createElement('div');
+      div.className = 'cell';
 
-        if (cell === 0) {
-          div.classList.add('block');
-        } else {
-          const input = document.createElement('input');
-          input.maxLength = 1;
-          div.appendChild(input);
-        }
+      if (cell === 0) {
+        div.classList.add('block');
+      } else {
+        const input = document.createElement('input');
+        input.maxLength = 1;
+        input.setAttribute('inputmode', 'none'); // 모바일 IME 차단
+        div.appendChild(input);
+      }
 
-        grid.appendChild(div);
-      });
+      grid.appendChild(div);
     });
-  </script>
+  });
+
+  // ===== 자모 입력 로직 =====
+
+  const inputs = Array.from(document.querySelectorAll('.cell input'));
+
+  const JAMO = [
+    "ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ",
+    "ㅏ","ㅑ","ㅓ","ㅕ","ㅗ","ㅛ","ㅜ","ㅠ","ㅡ","ㅣ"
+  ];
+
+  inputs.forEach((input, index) => {
+
+    input.addEventListener('keydown', (e) => {
+      // IME / 기본 입력 완전 차단
+      e.preventDefault();
+
+      // Backspace
+      if (e.key === 'Backspace') {
+        input.value = '';
+        const prev = inputs[index - 1];
+        if (prev) prev.focus();
+        return;
+      }
+
+      // 자모만 허용
+      if (JAMO.includes(e.key)) {
+        input.value = e.key;
+
+        const next = inputs[index + 1];
+        if (next) {
+          // 다음 이벤트 루프로 이동 (잔상 방지)
+          setTimeout(() => next.focus(), 0);
+        }
+      }
+    });
+
+  });
+</script>
+
 
 </body>
 </html>
