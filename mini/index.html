@@ -5,14 +5,92 @@
   <title>Mini Crossword</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
       text-align: center;
-      margin-top: 40px;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+    }
+
+    h1 {
+      margin-bottom: 16px;
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    /* 격자 컨테이너 */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      width: 260px;
+      margin: 0 auto;
+    }
+
+    /* 각 칸 */
+    .cell {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #000;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* 검은 칸 */
+    .cell.block {
+      background: #000;
+    }
+
+    /* (나중용) 번호 */
+    .cell .number {
+      position: absolute;
+      top: 2px;
+      left: 4px;
+      font-size: 10px;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
-  <h1>한글 미니 크로스워드</h1>
-  <p>곧 퍼즐이 여기에 나타납니다 🧩</p>
+
+  <h1>Mini Crossword</h1>
+
+  <div class="grid">
+    <!-- 1행 -->
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell block"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- 2행 -->
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell block"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- 3행 -->
+    <div class="cell block"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+
+    <!-- 4행 -->
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell block"></div>
+    <div class="cell block"></div>
+
+    <!-- 5행 -->
+    <div class="cell"></div>
+    <div class="cell block"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+    <div class="cell"></div>
+  </div>
+
 </body>
 </html>
