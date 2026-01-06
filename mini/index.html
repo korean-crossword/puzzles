@@ -198,9 +198,6 @@ input.addEventListener('beforeinput', (e) => {
   const char = e.data;
   if (!char || char.length !== 1) return;
 
-  if (input.value === char) {
-    return;
-  }
 
   // 글자 입력 (덮어쓰기)
   input.value = char;
