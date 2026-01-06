@@ -61,7 +61,8 @@
 
   <div class="grid" id="grid"></div>
 
-  <script>
+<script>
+  /* ===== 1. 그리드 데이터 ===== */
   const gridData = [
     [1, 1, 0, 1, 1],
     [1, 1, 0, 1, 1],
@@ -72,7 +73,7 @@
 
   const grid = document.getElementById('grid');
 
-  // 격자 생성
+  /* ===== 2. 그리드 생성 ===== */
   gridData.forEach(row => {
     row.forEach(cell => {
       const div = document.createElement('div');
@@ -83,7 +84,9 @@
       } else {
         const input = document.createElement('input');
         input.maxLength = 1;
-        input.setAttribute('inputmode', 'none'); // 모바일 IME 차단
+        input.autocomplete = 'off';
+        input.spellcheck = false;
+        input.inputMode = 'none'; // 모바일 키보드 방지
         div.appendChild(input);
       }
 
@@ -91,51 +94,41 @@
     });
   });
 
-  // ===== 자모 입력 로직 =====
-
+  /* ===== 3. 입력 처리 ===== */
   const inputs = Array.from(document.querySelectorAll('.cell input'));
 
-  const JAMO = [
-    "ㄱ","ㄴ","ㄷ","ㄹ","ㅁ","ㅂ","ㅅ","ㅇ","ㅈ","ㅊ","ㅋ","ㅌ","ㅍ","ㅎ",
-    "ㅏ","ㅑ","ㅓ","ㅕ","ㅗ","ㅛ","ㅜ","ㅠ","ㅡ","ㅣ"
-  ];
-
   inputs.forEach((input, index) => {
+    input.addEventListener('keydown', (e) => {
 
-input.addEventListener('keydown', (e) => {
-  // 1️⃣ 키 반복 입력 차단 (마지막 칸 2번 입력 해결)
-  if (e.repeat) return;
+      /* 🔒 두 번 입력 / 잔상 방지 */
+      if (e.repeat) return;
+      e.preventDefault();
 
-  // 2️⃣ 기본 입력 + IME 완전 차단
-  e.preventDefault();
+      /* ← 백스페이스 */
+      if (e.key === 'Backspace') {
+        input.value = '';
+        const prev = inputs[index - 1];
+        if (prev) prev.focus();
+        return;
+      }
 
-  // Backspace
-  if (e.key === 'Backspace') {
-    input.value = '';
-    const prev = inputs[index - 1];
-    if (prev) prev.focus();
-    return;
-  }
+      /* 🔹 허용: 단일 자모만 (ㅐ, ㅔ 제외) */
+      const isSingleJamo = /^[ㄱ-ㅎㅏ-ㅣ]$/.test(e.key);
+      const isBlocked = (e.key === 'ㅐ' || e.key === 'ㅔ');
 
-  // 3️⃣ 한글 자모 1글자만 허용
-  //    (ㄱ-ㅎ, ㅏ-ㅣ)
-  const isSingleJamo = /^[ㄱ-ㅎㅏ-ㅣ]$/.test(e.key);
+      if (isSingleJamo && !isBlocked) {
+        input.value = e.key;
 
-  // 4️⃣ ㅐ, ㅔ는 명시적으로 금지
-  const forbidden = ['ㅐ', 'ㅔ'];
-
-  if (isSingleJamo && !forbidden.includes(e.key)) {
-    input.value = e.key;
-
-    const next = inputs[index + 1];
-    if (next) {
-      next.focus();
-    }
-  }
-});
-
-
+        const next = inputs[index + 1];
+        if (next) {
+          // 다음 프레임에서 이동 → 잔상 방지
+          requestAnimationFrame(() => next.focus());
+        }
+      }
+    });
+  });
 </script>
+
 
 
 </body>
