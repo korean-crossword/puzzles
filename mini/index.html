@@ -150,7 +150,9 @@
       }
       lastFocusedInput = input;
 
-      highlightWord(index);
+      const cellIndex = cells.indexOf(input.parentElement);
+      highlightWord(cellIndex);
+
     });
 
     input.addEventListener('beforeinput', (e) => {
