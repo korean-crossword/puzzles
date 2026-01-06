@@ -98,35 +98,31 @@
   /* ===== 3. 입력 처리 ===== */
   inputs.forEach((input, index) => {
 
-    input.addEventListener('beforeinput', (e) => {
-      e.preventDefault();
+input.addEventListener('beforeinput', (e) => {
+  e.preventDefault();
 
-      // Backspace
-      if (e.inputType === 'deleteContentBackward') {
-        input.value = '';
-        const prev = inputs[index - 1];
-        if (prev) prev.focus();
-        return;
-      }
+  // Backspace
+  if (e.inputType === 'deleteContentBackward') {
+    input.value = '';
+    const prev = inputs[index - 1];
+    if (prev) prev.focus();
+    return;
+  }
 
-      const char = e.data;
-      if (!char) return;
+  const char = e.data;
+  if (!char) return;
 
-      // 이미 값이 있으면 무시 (마지막 칸 2번 입력 방지)
-      if (input.value !== '') return;
+  // 한 글자만 허용 (ㅐ, ㅔ 포함)
+  if (char.length !== 1) return;
 
-      // 한 글자만 허용 (IME 결과 포함)
-      if (char.length !== 1) return;
+  // ⭐ NYT 방식: 기존 값이 있어도 덮어쓰기
+  input.value = char;
 
-      input.value = char;
-
-      const next = inputs[index + 1];
-      if (next) {
-        requestAnimationFrame(() => next.focus());
-      }
-    });
-
-  });
+  const next = inputs[index + 1];
+  if (next) {
+    requestAnimationFrame(() => next.focus());
+  }
+});
 </script>
 
 
