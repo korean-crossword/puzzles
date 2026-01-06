@@ -103,6 +103,10 @@
   inputs.forEach((input, index) => {
 
 input.addEventListener('keydown', (e) => {
+  // 1️⃣ 키 반복 입력 차단 (마지막 칸 2번 입력 해결)
+  if (e.repeat) return;
+
+  // 2️⃣ 기본 입력 + IME 완전 차단
   e.preventDefault();
 
   // Backspace
@@ -113,20 +117,23 @@ input.addEventListener('keydown', (e) => {
     return;
   }
 
-  if (JAMO.includes(e.key)) {
-    input.value = e.key;
+  // 3️⃣ 한글 자모 1글자만 허용
+  //    (ㄱ-ㅎ, ㅏ-ㅣ)
+  const isSingleJamo = /^[ㄱ-ㅎㅏ-ㅣ]$/.test(e.key);
 
-    // ★ 핵심: 현재 input을 즉시 blur
-    input.blur();
+  // 4️⃣ ㅐ, ㅔ는 명시적으로 금지
+  const forbidden = ['ㅐ', 'ㅔ'];
+
+  if (isSingleJamo && !forbidden.includes(e.key)) {
+    input.value = e.key;
 
     const next = inputs[index + 1];
     if (next) {
-      requestAnimationFrame(() => {
-        next.focus();
-      });
+      next.focus();
     }
   }
 });
+
 
 </script>
 
