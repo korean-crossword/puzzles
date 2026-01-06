@@ -95,36 +95,54 @@
 
   const inputs = Array.from(document.querySelectorAll('.cell input'));
 
-  /* ===== 3. 입력 처리 ===== */
+  /* ===== 3. NYT 방향 상태 ===== */
+  let direction = 'across';        // 'across' | 'down'
+  let lastFocusedInput = null;
+
+  /* ===== 4. 입력 & 클릭 처리 ===== */
   inputs.forEach((input, index) => {
 
-input.addEventListener('beforeinput', (e) => {
-  e.preventDefault();
+    /* --- NYT식 클릭 → 방향 전환 --- */
+    input.addEventListener('click', () => {
+      if (lastFocusedInput === input) {
+        direction = (direction === 'across') ? 'down' : 'across';
+      }
+      lastFocusedInput = input;
 
-  // Backspace
-  if (e.inputType === 'deleteContentBackward') {
-    input.value = '';
-    const prev = inputs[index - 1];
-    if (prev) prev.focus();
-    return;
-  }
+      console.log('direction:', direction);
+    });
 
-  const char = e.data;
-  if (!char) return;
+    /* --- 입력 처리 --- */
+    input.addEventListener('beforeinput', (e) => {
+      e.preventDefault();
 
-  // 한 글자만 허용 (ㅐ, ㅔ 포함)
-  if (char.length !== 1) return;
+      // Backspace
+      if (e.inputType === 'deleteContentBackward') {
+        input.value = '';
+        const prev = inputs[index - 1];
+        if (prev) prev.focus();
+        return;
+      }
 
-  // ⭐ NYT 방식: 기존 값이 있어도 덮어쓰기
-  input.value = char;
+      const char = e.data;
+      if (!char) return;
 
-  const next = inputs[index + 1];
-  if (next) {
-    requestAnimationFrame(() => next.focus());
-    }
+      // 한 글자만 허용 (ㅐ, ㅔ 포함)
+      if (char.length !== 1) return;
+
+      // NYT 방식: 기존 값 덮어쓰기
+      input.value = char;
+
+      // (다음 단계에서 direction 기준 이동으로 바꿀 예정)
+      const next = inputs[index + 1];
+      if (next) {
+        requestAnimationFrame(() => next.focus());
+      }
+    });
+
   });
-});
 </script>
+
 
 
 
