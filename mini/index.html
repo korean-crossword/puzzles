@@ -100,6 +100,33 @@
     <div class="cell"><input maxlength="1"></div>
 
   </div>
+<script>
+  const inputs = Array.from(
+    document.querySelectorAll('.cell input')
+  );
+
+  inputs.forEach((input, index) => {
+
+    input.addEventListener('input', () => {
+      if (input.value.length === 1) {
+        const next = inputs[index + 1];
+        if (next) {
+          next.focus();
+        }
+      }
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && input.value === '') {
+        const prev = inputs[index - 1];
+        if (prev) {
+          prev.focus();
+        }
+      }
+    });
+
+  });
+</script>
 
 </body>
 </html>
