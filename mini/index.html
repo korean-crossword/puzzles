@@ -61,12 +61,26 @@
       background: #8fb8ff;   /* 단어 하이라이트보다 진하게 */
     }
 
+    .cell.wrong input {
+      background: #ffe0e0;
+      color: #b00020;
+    }
+
+
   </style>
 </head>
 <body>
 
 <h1>Mini Crossword</h1>
 <div class="grid" id="grid"></div>
+<button id="checkPuzzle" style="
+  margin-top: 16px;
+  padding: 8px 14px;
+  font-size: 14px;
+">
+  Check Puzzle
+</button>
+
 <div id="message" style="
   margin-top: 16px;
   font-size: 16px;
@@ -162,6 +176,31 @@ const userGrid = Array.from({ length: ROWS }, () =>
 function showSolvedMessage() {
   messageEl.style.display = 'block';
 }
+
+  function checkPuzzle() {
+    cells.forEach((cell, index) => {
+      cell.classList.remove('wrong');
+  
+      const input = cell.querySelector('input');
+      if (!input) return;
+  
+      const r = Math.floor(index / COLS);
+      const c = index % COLS;
+  
+      const userChar = input.value;
+      const answer = solutionGrid[r][c];
+  
+      // 비어 있으면 체크 안 함
+      if (!userChar) return;
+  
+      if (userChar !== answer) {
+        cell.classList.add('wrong');
+      }
+    });
+  }
+
+  document.getElementById('checkPuzzle')
+  .addEventListener('click', checkPuzzle);
 
 
 
