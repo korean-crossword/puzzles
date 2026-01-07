@@ -67,178 +67,172 @@
   <div class="grid" id="grid"></div>
 
 <script>
-  /* ===== 1. 그리드 데이터 ===== */
-  const gridData = [
-    [1, 1, 0, 1, 1],
-    [1, 1, 0, 1, 1],
-    [0, 1, 1, 1, 1],
-    [1, 1, 1, 0, 0],
-    [1, 0, 1, 1, 1],
-  ];
+/* ===== 1. 그리드 데이터 ===== */
+const gridData = [
+  [1, 1, 0, 1, 1],
+  [1, 1, 0, 1, 1],
+  [0, 1, 1, 1, 1],
+  [1, 1, 1, 0, 0],
+  [1, 0, 1, 1, 1],
+];
 
-  const ROWS = 5;
-  const COLS = 5;
-  const grid = document.getElementById('grid');
+const ROWS = 5;
+const COLS = 5;
+const grid = document.getElementById('grid');
 
-  /* ===== 2. 그리드 생성 ===== */
-  gridData.forEach(row => {
-    row.forEach(cell => {
-      const div = document.createElement('div');
-      div.className = 'cell';
-      if (cell === 0) {
-        div.classList.add('block');
-      } else {
-        const input = document.createElement('input');
-        input.maxLength = 1;
-        input.autocomplete = 'off';
-        input.spellcheck = false;
-        div.appendChild(input);
-      }
-      grid.appendChild(div);
-    });
+/* ===== 2. 그리드 생성 ===== */
+gridData.forEach(row => {
+  row.forEach(cell => {
+    const div = document.createElement('div');
+    div.className = 'cell';
+    if (cell === 0) {
+      div.classList.add('block');
+    } else {
+      const input = document.createElement('input');
+      input.maxLength = 1;
+      input.autocomplete = 'off';
+      input.spellcheck = false;
+      div.appendChild(input);
+    }
+    grid.appendChild(div);
   });
+});
 
-  const cells = Array.from(document.querySelectorAll('.cell'));
-  const inputs = Array.from(document.querySelectorAll('.cell input'));
+const cells = Array.from(document.querySelectorAll('.cell'));
+const inputs = Array.from(document.querySelectorAll('.cell input'));
 
-  /* ===== 3. input 위치 매핑 (방향키 이동용) ===== */
-  const size = 5;
-  const inputPositions = [];
-  gridData.forEach((row, r) => {
-    row.forEach((cell, c) => {
-      if (cell === 1) inputPositions.push({ row: r, col: c });
-    });
+/* ===== 3. input 위치 매핑 (방향키 이동용) ===== */
+const inputPositions = [];
+gridData.forEach((row, r) => {
+  row.forEach((cell, c) => {
+    if (cell === 1) inputPositions.push({ row: r, col: c });
   });
+});
 
-  function getInputIndex(row, col) {
-    return inputPositions.findIndex(pos => pos.row === row && pos.col === col);
+function getInputIndex(row, col) {
+  return inputPositions.findIndex(pos => pos.row === row && pos.col === col);
+}
+
+/* ===== 4. 자동 이동 유틸 ===== */
+let direction = 'across';
+let lastFocusedInput = null;
+
+function getNextCellIndex(cellIndex) {
+  const row = Math.floor(cellIndex / COLS);
+  const col = cellIndex % COLS;
+  let nextRow = row;
+  let nextCol = col;
+
+  if (direction === 'across') nextCol++;
+  else nextRow++;
+
+  if (nextRow < 0 || nextRow >= ROWS || nextCol < 0 || nextCol >= COLS) return null;
+  if (gridData[nextRow][nextCol] === 0) return null;
+
+  // 다음 input index 찾기
+  return getInputIndex(nextRow, nextCol);
+}
+
+/* ===== 5. highlight 유틸 ===== */
+function clearHighlights() {
+  cells.forEach(cell => cell.classList.remove('highlight'));
+}
+
+function highlightWord(startIndex) {
+  clearHighlights();
+  let row = Math.floor(startIndex / COLS);
+  let col = startIndex % COLS;
+
+  if (direction === 'across') {
+    while (col > 0 && gridData[row][col - 1] === 1) col--;
+    while (col < COLS && gridData[row][col] === 1) {
+      cells[row * COLS + col].classList.add('highlight');
+      col++;
+    }
+  } else {
+    while (row > 0 && gridData[row - 1][col] === 1) row--;
+    while (row < ROWS && gridData[row][col] === 1) {
+      cells[row * COLS + col].classList.add('highlight');
+      row++;
+    }
   }
+}
 
+/* ===== 6. 방향키 이동 ===== */
 function moveByArrow(index, key) {
   const { row, col } = inputPositions[index];
   let r = row, c = col;
 
+  // 방향 전환
   let newDirection = direction;
-
-  // 방향 전환 로직
   if (key === 'ArrowUp' || key === 'ArrowDown') newDirection = 'down';
   if (key === 'ArrowLeft' || key === 'ArrowRight') newDirection = 'across';
 
-  // 우선 direction 바꾸고 하이라이트 갱신
   if (newDirection !== direction) {
     direction = newDirection;
-    const cellIndex = cells.indexOf(inputs[index].parentElement);
-    highlightWord(cellIndex);
+    highlightWord(index);
   }
 
+  // 이동 좌표 계산
   if (key === 'ArrowRight') c++;
   if (key === 'ArrowLeft') c--;
   if (key === 'ArrowDown') r++;
   if (key === 'ArrowUp') r--;
 
-  if (r < 0 || r >= size || c < 0 || c >= size) return;
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
   if (gridData[r][c] === 0) return;
 
   const nextIndex = getInputIndex(r, c);
-  if (nextIndex !== -1) inputs[nextIndex].focus();
+  if (nextIndex !== -1) {
+    inputs[nextIndex].focus();
+    highlightWord(nextIndex);
+  }
 }
 
+/* ===== 7. 입력 + 클릭 처리 ===== */
+inputs.forEach((input, index) => {
 
-  /* ===== 4. NYT 방향 상태 ===== */
-  let direction = 'across';
-  let lastFocusedInput = null;
-
-  /* ===== 5. 자동 이동 유틸 ===== */
-  function getNextCellIndex(cellIndex) {
-    const row = Math.floor(cellIndex / COLS);
-    const col = cellIndex % COLS;
-    let nextRow = row;
-    let nextCol = col;
-
-    if (direction === 'across') nextCol++;
-    else nextRow++;
-
-    if (nextRow < 0 || nextRow >= ROWS || nextCol < 0 || nextCol >= COLS) return null;
-    if (gridData[nextRow][nextCol] === 0) return null;
-
-    return nextRow * COLS + nextCol;
-  }
-
-  /* ===== 6. 하이라이트 유틸 ===== */
-  function clearHighlights() {
-    cells.forEach(cell => cell.classList.remove('highlight'));
-  }
-
-  function highlightWord(startIndex) {
-    clearHighlights();
-    let row = Math.floor(startIndex / COLS);
-    let col = startIndex % COLS;
-
-    if (direction === 'across') {
-      while (col > 0 && gridData[row][col - 1] === 1) col--;
-      while (col < COLS && gridData[row][col] === 1) {
-        cells[row * COLS + col].classList.add('highlight');
-        col++;
-      }
-    } else {
-      while (row > 0 && gridData[row - 1][col] === 1) row--;
-      while (row < ROWS && gridData[row][col] === 1) {
-        cells[row * COLS + col].classList.add('highlight');
-        row++;
-      }
+  // 클릭 → direction 전환 + highlight
+  input.addEventListener('click', () => {
+    if (lastFocusedInput === input) {
+      direction = (direction === 'across') ? 'down' : 'across';
     }
-  }
+    lastFocusedInput = input;
+    highlightWord(cells.indexOf(input.parentElement));
+  });
 
-  /* ===== 7. 입력 & 클릭 & 방향키 ===== */
-    inputs.forEach((input, index) => {
-    let isComposing = false;
-  
-    input.addEventListener('compositionstart', () => { isComposing = true; });
-    input.addEventListener('compositionend', (e) => {
-      isComposing = false;
-      input.value = e.data;
-  
-      const nextIndex = getNextCellIndex(cells.indexOf(input.parentElement));
-      if (nextIndex !== null) {
-        const nextInput = cells[nextIndex].querySelector('input');
-        if (nextInput) {
-          // focus 이동 전에 이전 입력 영향 제거
-          nextInput.value = '';
-          nextInput.focus();
+  // Backspace 처리
+  input.addEventListener('beforeinput', (e) => {
+    if (e.inputType === 'deleteContentBackward') {
+      e.preventDefault();
+      input.value = '';
+    }
+  });
+
+  // keydown → 방향키 이동
+  input.addEventListener('keydown', (e) => {
+    if (e.key.startsWith('Arrow')) {
+      e.preventDefault();
+      moveByArrow(index, e.key);
+    } else {
+      // 일반 글자 입력 → 현재 칸 덮어쓰기
+      if (e.key.length === 1) {
+        input.value = e.key;
+
+        // 자동 이동
+        const cellIndex = cells.indexOf(input.parentElement);
+        const nextIndex = getNextCellIndex(cellIndex);
+        if (nextIndex !== null) {
+          inputs[nextIndex].focus();
           highlightWord(nextIndex);
         }
       }
-    });
-  
-    input.addEventListener('beforeinput', (e) => {
-      if (isComposing) return;
-      if (e.inputType === 'deleteContentBackward') {
-        e.preventDefault();
-        input.value = '';
-      }
-    });
-  
-    // 방향키 이동
-    input.addEventListener('keydown', (e) => {
-      if (e.key.startsWith('Arrow')) {
-        e.preventDefault();
-  
-        const oldIndex = cells.indexOf(input.parentElement);
-        moveByArrow(index, e.key);
-  
-        // 이동 후 highlight
-        const newIndex = cells.findIndex(c => c.querySelector('input') === document.activeElement);
-        if (newIndex !== -1) highlightWord(newIndex);
-  
-        // 이동한 칸 초기화
-        const activeInput = document.activeElement;
-        if (activeInput.tagName === 'INPUT') activeInput.value = '';
-      }
-    });
+    }
   });
 
-
+});
 </script>
+
 
 
 
