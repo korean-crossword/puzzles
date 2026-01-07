@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Hangul Crossword NYT-style</title>
+  <title>Hangul Crossword – Stable Version</title>
   <style>
     body {
       font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif;
@@ -21,6 +21,7 @@
       text-align: center;
       font-size: 22px;
       border: 1px solid #444;
+      box-sizing: border-box;
     }
 
     .cell:focus {
@@ -30,74 +31,83 @@
 </head>
 <body>
 
-<h1>NYT-style 한글 입력</h1>
+<h1>한글 크로스워드 입력 (NYT-style)</h1>
+<p>빠르게 <strong>가나다라마</strong>를 쳐보세요.</p>
 
 <div id="grid">
-  <input class="cell" />
-  <input class="cell" />
-  <input class="cell" />
-  <input class="cell" />
-  <input class="cell" />
+  <input class="cell" maxlength="1" />
+  <input class="cell" maxlength="1" />
+  <input class="cell" maxlength="1" />
+  <input class="cell" maxlength="1" />
+  <input class="cell" maxlength="1" />
 </div>
 
 <script>
   const cells = Array.from(document.querySelectorAll(".cell"));
   let isComposing = false;
 
-  cells.forEach(cell => {
-    cell.setAttribute("maxlength", "3"); // 조합 대비
-    cell.setAttribute("autocomplete", "off");
-    cell._prevValue = "";
-  });
-
-  function getNextCell(i) {
-    return cells[i + 1] ?? null;
-  }
+  /* ---------- 유틸 ---------- */
 
   function focusCell(cell) {
     if (cell) cell.focus();
   }
 
-  function commonPrefix(a, b) {
-    let i = 0;
-    while (i < a.length && i < b.length && a[i] === b[i]) i++;
-    return a.slice(0, i);
+  function getNextCell(index) {
+    return cells[index + 1] ?? null;
   }
 
+  function distributeText(startIndex, text) {
+    let i = startIndex;
+    for (const ch of text) {
+      if (i >= cells.length) break;
+      cells[i].value = ch;
+      i++;
+    }
+    focusCell(cells[Math.min(i, cells.length - 1)]);
+  }
+
+  /* ---------- 이벤트 ---------- */
+
   cells.forEach((cell, index) => {
+    cell.setAttribute("autocomplete", "off");
+    cell.setAttribute("inputmode", "text");
 
     cell.addEventListener("compositionstart", () => {
       isComposing = true;
-      cell._prevValue = cell.value;
-    });
-
-    cell.addEventListener("compositionupdate", (e) => {
-      const prev = cell._prevValue;
-      const curr = e.target.value;
-
-      // 핵심 케이스: "간" → "가나"
-      if (prev.length === 1 && curr.length === 2) {
-        const prefix = commonPrefix(prev, curr);
-        const rest = curr.slice(prefix.length);
-
-        if (prefix.length === 1 && rest.length === 1) {
-          cell.value = prefix;
-
-          const next = getNextCell(index);
-          if (next) {
-            next.value = rest;
-            next._prevValue = rest;
-            focusCell(next);
-          }
-        }
-      }
-
-      cell._prevValue = e.target.value;
     });
 
     cell.addEventListener("compositionend", (e) => {
       isComposing = false;
-      cell._prevValue = "";
+
+      const text = e.target.value;
+
+      // 정상: 한 음절
+      if (text.length === 1) {
+        focusCell(getNextCell(index));
+        return;
+      }
+
+      // IME가 "가나"처럼 넘겨준 경우
+      if (text.length > 1) {
+        e.target.value = "";
+        distributeText(index, text);
+      }
+    });
+
+    cell.addEventListener("input", (e) => {
+      if (isComposing) return;
+
+      const text = e.target.value;
+
+      if (text.length === 1) {
+        focusCell(getNextCell(index));
+        return;
+      }
+
+      if (text.length > 1) {
+        e.target.value = "";
+        distributeText(index, text);
+      }
     });
 
     cell.addEventListener("keydown", (e) => {
@@ -113,6 +123,16 @@
         } else {
           cell.value = "";
         }
+        e.preventDefault();
+      }
+
+      if (e.key === "ArrowRight") {
+        focusCell(getNextCell(index));
+        e.preventDefault();
+      }
+
+      if (e.key === "ArrowLeft") {
+        focusCell(cells[index - 1]);
         e.preventDefault();
       }
     });
