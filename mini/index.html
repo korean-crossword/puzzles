@@ -56,11 +56,6 @@
     .cell.highlight input {
       background: #cfe3ff;
     }
-    
-    .cell.active input {
-      background: #8fb8ff;   /* 단어 하이라이트보다 진하게 */
-    }
-
   </style>
 </head>
 <body>
@@ -126,16 +121,6 @@ function clearHighlight() {
   cells.forEach(c => c.classList.remove('highlight'));
 }
 
-function clearActive() {
-  cells.forEach(cell => cell.classList.remove('active'));
-}
-
-function setActive(cellIndex) {
-  clearActive();
-  cells[cellIndex].classList.add('active');
-}
-
-
 function highlightWord(startIndex) {
   clearHighlight();
 
@@ -155,10 +140,7 @@ function highlightWord(startIndex) {
       row++;
     }
   }
-
-  setActive(startIndex);   // ⭐ 현재 칸 강조
 }
-
 
 function moveFocus(fromIndex, dr, dc) {
   const r = Math.floor(fromIndex / COLS) + dr;
@@ -193,61 +175,38 @@ inputs.forEach(input => {
   });
 
   /* 키보드 */
-  input.addEventListener('keydown', (e) => {
+  input.addEventListener('keydown', e => {
 
-    const cellIndex = cellIndexFromInput(input);
-  
-    /* ===== 방향키 ===== */
+    /* 방향키 */
     if (e.key.startsWith('Arrow')) {
       e.preventDefault();
-  
-      let intendedDirection =
-        (e.key === 'ArrowUp' || e.key === 'ArrowDown') ? 'down' : 'across';
-  
-      if (intendedDirection !== direction) {
-        direction = intendedDirection;
-        highlightWord(cellIndex);
-        return;
-      }
-  
-      let r = Math.floor(cellIndex / COLS);
-      let c = cellIndex % COLS;
-  
-      if (e.key === 'ArrowRight') c++;
-      if (e.key === 'ArrowLeft') c--;
-      if (e.key === 'ArrowDown') r++;
-      if (e.key === 'ArrowUp') r--;
-  
-      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
-      if (gridData[r][c] === 0) return;
-  
-      const nextIndex = r * COLS + c;
-      const nextInput = cells[nextIndex].querySelector('input');
-      if (!nextInput) return;
-  
-      nextInput.focus();
-      highlightWord(nextIndex);
+      const idx = cellIndexFromInput(input);
+      focusedIndex = idx;
+
+      if (e.key === 'ArrowLeft')  { direction = 'across'; moveFocus(idx, 0, -1); }
+      if (e.key === 'ArrowRight') { direction = 'across'; moveFocus(idx, 0,  1); }
+      if (e.key === 'ArrowUp')    { direction = 'down';   moveFocus(idx, -1, 0); }
+      if (e.key === 'ArrowDown')  { direction = 'down';   moveFocus(idx,  1, 0); }
       return;
     }
-  
-    /* ===== Backspace ===== */
+
+    /* Backspace */
     if (e.key === 'Backspace') {
       e.preventDefault();
       input.value = '';
       return;
     }
-  
-    /* ===== 문자 입력 ===== */
+
+    /* 문자 입력 (화이트리스트) */
     if (ALLOWED_CHARS.includes(e.key)) {
       e.preventDefault();
-      input.value = e.key;
+      input.value = e.key; // 항상 덮어쓰기
       return;
     }
-  
-    /* ===== 기타 키 차단 ===== */
+
+    /* 그 외 모든 키 차단 */
     e.preventDefault();
   });
-
 });
 </script>
 
