@@ -99,9 +99,10 @@ gridData.forEach(row => {
       div.classList.add('block');
     } else {
       const input = document.createElement('input');
-      input.maxLength = 1;
+      input.readOnly = true;   // ⭐ 핵심
       input.autocomplete = 'off';
       input.spellcheck = false;
+
       div.appendChild(input);
     }
     grid.appendChild(div);
@@ -156,6 +157,7 @@ function moveFocus(fromIndex, dr, dc) {
     highlightWord(nextIndex);
   }
 }
+  
 
 /* ===== 6. 이벤트 ===== */
 inputs.forEach(input => {
