@@ -114,21 +114,35 @@
     return inputPositions.findIndex(pos => pos.row === row && pos.col === col);
   }
 
-  function moveByArrow(index, key) {
-    const { row, col } = inputPositions[index];
-    let r = row, c = col;
+function moveByArrow(index, key) {
+  const { row, col } = inputPositions[index];
+  let r = row, c = col;
 
-    if (key === 'ArrowRight') c++;
-    if (key === 'ArrowLeft') c--;
-    if (key === 'ArrowDown') r++;
-    if (key === 'ArrowUp') r--;
+  let newDirection = direction;
 
-    if (r < 0 || r >= size || c < 0 || c >= size) return;
-    if (gridData[r][c] === 0) return;
+  // 방향 전환 로직
+  if (key === 'ArrowUp' || key === 'ArrowDown') newDirection = 'down';
+  if (key === 'ArrowLeft' || key === 'ArrowRight') newDirection = 'across';
 
-    const nextIndex = getInputIndex(r, c);
-    if (nextIndex !== -1) inputs[nextIndex].focus();
+  // 우선 direction 바꾸고 하이라이트 갱신
+  if (newDirection !== direction) {
+    direction = newDirection;
+    const cellIndex = cells.indexOf(inputs[index].parentElement);
+    highlightWord(cellIndex);
   }
+
+  if (key === 'ArrowRight') c++;
+  if (key === 'ArrowLeft') c--;
+  if (key === 'ArrowDown') r++;
+  if (key === 'ArrowUp') r--;
+
+  if (r < 0 || r >= size || c < 0 || c >= size) return;
+  if (gridData[r][c] === 0) return;
+
+  const nextIndex = getInputIndex(r, c);
+  if (nextIndex !== -1) inputs[nextIndex].focus();
+}
+
 
   /* ===== 4. NYT 방향 상태 ===== */
   let direction = 'across';
@@ -191,26 +205,27 @@
     });
 
     // composition 시작/끝 (한글 IME)
-    input.addEventListener('compositionstart', () => { isComposing = true; });
     input.addEventListener('compositionend', (e) => {
-      isComposing = false;
       const char = e.data;
       if (!char || char.length !== 1) return;
-
+    
       input.value = char;
-
+    
       const cellIndex = cells.indexOf(input.parentElement);
       const nextCellIndex = getNextCellIndex(cellIndex);
-
+    
       if (nextCellIndex !== null) {
         const nextCell = cells[nextCellIndex];
         const nextInput = nextCell.querySelector('input');
         if (nextInput) {
-          requestAnimationFrame(() => nextInput.focus());
-          highlightWord(nextCellIndex);
+          setTimeout(() => {
+            nextInput.focus();
+            highlightWord(nextCellIndex);
+          }, 0);
         }
       }
     });
+
 
     // Backspace
     input.addEventListener('beforeinput', (e) => {
