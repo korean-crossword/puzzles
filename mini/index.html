@@ -81,13 +81,12 @@ const COLS = 5;
 const grid = document.getElementById('grid');
 
 /* ===== 2. 그리드 생성 ===== */
-gridData.forEach(row => {
-  row.forEach(cell => {
+gridData.forEach((row) => {
+  row.forEach((cell) => {
     const div = document.createElement('div');
     div.className = 'cell';
-    if (cell === 0) {
-      div.classList.add('block');
-    } else {
+    if (cell === 0) div.classList.add('block');
+    else {
       const input = document.createElement('input');
       input.maxLength = 1;
       input.autocomplete = 'off';
@@ -113,35 +112,19 @@ function getInputIndex(row, col) {
   return inputPositions.findIndex(pos => pos.row === row && pos.col === col);
 }
 
-/* ===== 4. 자동 이동 유틸 ===== */
+/* ===== 4. 하이라이트 ===== */
 let direction = 'across';
 let lastFocusedInput = null;
 
-function getNextCellIndex(cellIndex) {
-  const row = Math.floor(cellIndex / COLS);
-  const col = cellIndex % COLS;
-  let nextRow = row;
-  let nextCol = col;
-
-  if (direction === 'across') nextCol++;
-  else nextRow++;
-
-  if (nextRow < 0 || nextRow >= ROWS || nextCol < 0 || nextCol >= COLS) return null;
-  if (gridData[nextRow][nextCol] === 0) return null;
-
-  // 다음 input index 찾기
-  return getInputIndex(nextRow, nextCol);
-}
-
-/* ===== 5. highlight 유틸 ===== */
 function clearHighlights() {
   cells.forEach(cell => cell.classList.remove('highlight'));
 }
 
-function highlightWord(startIndex) {
+function highlightWordByInput(input) {
   clearHighlights();
-  let row = Math.floor(startIndex / COLS);
-  let col = startIndex % COLS;
+  const cellIndex = cells.indexOf(input.parentElement);
+  let row = Math.floor(cellIndex / COLS);
+  let col = cellIndex % COLS;
 
   if (direction === 'across') {
     while (col > 0 && gridData[row][col - 1] === 1) col--;
@@ -158,22 +141,36 @@ function highlightWord(startIndex) {
   }
 }
 
+/* ===== 5. 다음 칸 계산 (자동 이동) ===== */
+function getNextCellIndex(cellIndex) {
+  const row = Math.floor(cellIndex / COLS);
+  const col = cellIndex % COLS;
+  let r = row;
+  let c = col;
+
+  if (direction === 'across') c++;
+  else r++;
+
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return null;
+  if (gridData[r][c] === 0) return null;
+
+  return getInputIndex(r, c);
+}
+
 /* ===== 6. 방향키 이동 ===== */
 function moveByArrow(index, key) {
   const { row, col } = inputPositions[index];
   let r = row, c = col;
 
-  // 방향 전환
   let newDirection = direction;
   if (key === 'ArrowUp' || key === 'ArrowDown') newDirection = 'down';
   if (key === 'ArrowLeft' || key === 'ArrowRight') newDirection = 'across';
 
   if (newDirection !== direction) {
     direction = newDirection;
-    highlightWord(index);
+    highlightWordByInput(inputs[index]);
   }
 
-  // 이동 좌표 계산
   if (key === 'ArrowRight') c++;
   if (key === 'ArrowLeft') c--;
   if (key === 'ArrowDown') r++;
@@ -185,11 +182,11 @@ function moveByArrow(index, key) {
   const nextIndex = getInputIndex(r, c);
   if (nextIndex !== -1) {
     inputs[nextIndex].focus();
-    highlightWord(nextIndex);
+    highlightWordByInput(inputs[nextIndex]);
   }
 }
 
-/* ===== 7. 입력 + 클릭 처리 ===== */
+/* ===== 7. 입력 및 클릭 처리 ===== */
 inputs.forEach((input, index) => {
 
   // 클릭 → direction 전환 + highlight
@@ -198,7 +195,7 @@ inputs.forEach((input, index) => {
       direction = (direction === 'across') ? 'down' : 'across';
     }
     lastFocusedInput = input;
-    highlightWord(cells.indexOf(input.parentElement));
+    highlightWordByInput(input);
   });
 
   // Backspace 처리
@@ -209,23 +206,20 @@ inputs.forEach((input, index) => {
     }
   });
 
-  // keydown → 방향키 이동
+  // keydown → 방향키 이동 + 글자 입력
   input.addEventListener('keydown', (e) => {
     if (e.key.startsWith('Arrow')) {
       e.preventDefault();
       moveByArrow(index, e.key);
-    } else {
-      // 일반 글자 입력 → 현재 칸 덮어쓰기
-      if (e.key.length === 1) {
-        input.value = e.key;
+    } else if (e.key.length === 1) {
+      e.preventDefault();
+      input.value = e.key;
 
-        // 자동 이동
-        const cellIndex = cells.indexOf(input.parentElement);
-        const nextIndex = getNextCellIndex(cellIndex);
-        if (nextIndex !== null) {
-          inputs[nextIndex].focus();
-          highlightWord(nextIndex);
-        }
+      // 자동 이동
+      const nextIndex = getNextCellIndex(cells.indexOf(input.parentElement));
+      if (nextIndex !== null) {
+        inputs[nextIndex].focus();
+        highlightWordByInput(inputs[nextIndex]);
       }
     }
   });
