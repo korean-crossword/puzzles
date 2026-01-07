@@ -190,47 +190,26 @@ function moveByArrow(index, key) {
   }
 
   /* ===== 7. 입력 & 클릭 & 방향키 ===== */
-  
-  inputs.forEach((input, index) => {
+    inputs.forEach((input, index) => {
     let isComposing = false;
   
-    // 클릭 → direction 전환 + highlight
-    input.addEventListener('click', () => {
-      if (lastFocusedInput === input) {
-        direction = (direction === 'across') ? 'down' : 'across';
-      }
-      lastFocusedInput = input;
-      highlightWord(cells.indexOf(input.parentElement));
-    });
-  
-    // IME 시작
-    input.addEventListener('compositionstart', () => {
-      isComposing = true;
-    });
-  
+    input.addEventListener('compositionstart', () => { isComposing = true; });
     input.addEventListener('compositionend', (e) => {
       isComposing = false;
-      const char = e.data;
-      if (!char || char.length !== 1) return;
+      input.value = e.data;
   
-      // 현재 칸에 값 확정
-      input.value = char;
-  
-      // 다음 칸 focus 이동
-      const cellIndex = cells.indexOf(input.parentElement);
-      const nextCellIndex = getNextCellIndex(cellIndex);
-      if (nextCellIndex !== null) {
-        setTimeout(() => {   // 큐에 넣어서 IME 처리가 끝난 뒤
-          const nextInput = cells[nextCellIndex].querySelector('input');
-          if (nextInput) {
-            nextInput.focus();
-            highlightWord(nextCellIndex);
-          }
-        }, 0);
+      const nextIndex = getNextCellIndex(cells.indexOf(input.parentElement));
+      if (nextIndex !== null) {
+        const nextInput = cells[nextIndex].querySelector('input');
+        if (nextInput) {
+          // focus 이동 전에 이전 입력 영향 제거
+          nextInput.value = '';
+          nextInput.focus();
+          highlightWord(nextIndex);
+        }
       }
     });
   
-    // Backspace
     input.addEventListener('beforeinput', (e) => {
       if (isComposing) return;
       if (e.inputType === 'deleteContentBackward') {
@@ -243,11 +222,21 @@ function moveByArrow(index, key) {
     input.addEventListener('keydown', (e) => {
       if (e.key.startsWith('Arrow')) {
         e.preventDefault();
+  
+        const oldIndex = cells.indexOf(input.parentElement);
         moveByArrow(index, e.key);
-        highlightWord(cells.indexOf(input.parentElement));
+  
+        // 이동 후 highlight
+        const newIndex = cells.findIndex(c => c.querySelector('input') === document.activeElement);
+        if (newIndex !== -1) highlightWord(newIndex);
+  
+        // 이동한 칸 초기화
+        const activeInput = document.activeElement;
+        if (activeInput.tagName === 'INPUT') activeInput.value = '';
       }
     });
-});
+  });
+
 
 </script>
 
