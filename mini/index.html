@@ -209,8 +209,10 @@ function moveByArrow(index, key) {
       const char = e.data;
       if (!char || char.length !== 1) return;
     
+      // 1️⃣ 현재 칸에 입력 확정
       input.value = char;
     
+      // 2️⃣ 다음 칸으로 이동
       const cellIndex = cells.indexOf(input.parentElement);
       const nextCellIndex = getNextCellIndex(cellIndex);
     
@@ -218,6 +220,7 @@ function moveByArrow(index, key) {
         const nextCell = cells[nextCellIndex];
         const nextInput = nextCell.querySelector('input');
         if (nextInput) {
+          // 3️⃣ setTimeout으로 IME 처리가 완전히 끝난 뒤 focus 이동
           setTimeout(() => {
             nextInput.focus();
             highlightWord(nextCellIndex);
@@ -225,6 +228,7 @@ function moveByArrow(index, key) {
         }
       }
     });
+
 
 
     // Backspace
