@@ -190,69 +190,65 @@ function moveByArrow(index, key) {
   }
 
   /* ===== 7. 입력 & 클릭 & 방향키 ===== */
+  
   inputs.forEach((input, index) => {
     let isComposing = false;
-
+  
     // 클릭 → direction 전환 + highlight
     input.addEventListener('click', () => {
       if (lastFocusedInput === input) {
         direction = (direction === 'across') ? 'down' : 'across';
       }
       lastFocusedInput = input;
-
-      const cellIndex = cells.indexOf(input.parentElement);
-      highlightWord(cellIndex);
+      highlightWord(cells.indexOf(input.parentElement));
     });
-
-    // composition 시작/끝 (한글 IME)
+  
+    // IME 시작
+    input.addEventListener('compositionstart', () => {
+      isComposing = true;
+    });
+  
     input.addEventListener('compositionend', (e) => {
+      isComposing = false;
       const char = e.data;
       if (!char || char.length !== 1) return;
-    
-      // 1️⃣ 현재 칸에 입력 확정
+  
+      // 현재 칸에 값 확정
       input.value = char;
-    
-      // 2️⃣ 다음 칸으로 이동
+  
+      // 다음 칸 focus 이동
       const cellIndex = cells.indexOf(input.parentElement);
       const nextCellIndex = getNextCellIndex(cellIndex);
-    
       if (nextCellIndex !== null) {
-        const nextCell = cells[nextCellIndex];
-        const nextInput = nextCell.querySelector('input');
-        if (nextInput) {
-          // 3️⃣ setTimeout으로 IME 처리가 완전히 끝난 뒤 focus 이동
-          setTimeout(() => {
+        setTimeout(() => {   // 큐에 넣어서 IME 처리가 끝난 뒤
+          const nextInput = cells[nextCellIndex].querySelector('input');
+          if (nextInput) {
             nextInput.focus();
             highlightWord(nextCellIndex);
-          }, 0);
-        }
+          }
+        }, 0);
       }
     });
-
-
-
+  
     // Backspace
     input.addEventListener('beforeinput', (e) => {
       if (isComposing) return;
       if (e.inputType === 'deleteContentBackward') {
         e.preventDefault();
         input.value = '';
-        // 나중에 이전 칸 이동 가능
       }
     });
-
+  
     // 방향키 이동
     input.addEventListener('keydown', (e) => {
       if (e.key.startsWith('Arrow')) {
         e.preventDefault();
         moveByArrow(index, e.key);
-
-        // 이동 후 highlight 갱신
-        const cellIndex = cells.indexOf(input.parentElement);
-        highlightWord(cellIndex);
+        highlightWord(cells.indexOf(input.parentElement));
       }
     });
-  });
+});
+
 </script>
 
 
