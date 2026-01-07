@@ -2,11 +2,10 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Hangul Crossword Input</title>
+  <title>Hangul Crossword NYT-style</title>
   <style>
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
-                   "Noto Sans KR", sans-serif;
+      font-family: system-ui, -apple-system, "Noto Sans KR", sans-serif;
       padding: 40px;
     }
 
@@ -22,17 +21,16 @@
       text-align: center;
       font-size: 22px;
       border: 1px solid #444;
-      box-sizing: border-box;
     }
 
     .cell:focus {
-      outline: 2px solid #3b82f6;
+      outline: 2px solid #2563eb;
     }
   </style>
 </head>
 <body>
 
-<h1>한글 크로스워드 입력 테스트</h1>
+<h1>NYT-style 한글 입력</h1>
 
 <div id="grid">
   <input class="cell" />
@@ -43,111 +41,71 @@
 </div>
 
 <script>
-  /* ===============================
-     기본 설정
-     =============================== */
-
   const cells = Array.from(document.querySelectorAll(".cell"));
   let isComposing = false;
 
   cells.forEach(cell => {
-    cell.setAttribute("maxlength", "2"); // IME 조합 대비
+    cell.setAttribute("maxlength", "3"); // 조합 대비
     cell.setAttribute("autocomplete", "off");
-    cell.setAttribute("inputmode", "text");
+    cell._prevValue = "";
   });
 
-  /* ===============================
-     유틸 함수
-     =============================== */
-
-  function getNextCell(index) {
-    return cells[index + 1] ?? null;
-  }
-
-  function getPrevCell(index) {
-    return cells[index - 1] ?? null;
+  function getNextCell(i) {
+    return cells[i + 1] ?? null;
   }
 
   function focusCell(cell) {
     if (cell) cell.focus();
   }
 
-  function distributeText(startIndex, text) {
-    let i = startIndex;
-    for (const ch of text) {
-      if (i >= cells.length) break;
-      cells[i].value = ch;
-      i++;
-    }
-    focusCell(cells[Math.min(i, cells.length - 1)]);
+  function commonPrefix(a, b) {
+    let i = 0;
+    while (i < a.length && i < b.length && a[i] === b[i]) i++;
+    return a.slice(0, i);
   }
-
-  /* ===============================
-     이벤트 바인딩
-     =============================== */
 
   cells.forEach((cell, index) => {
 
-    /* --- IME 시작 --- */
     cell.addEventListener("compositionstart", () => {
       isComposing = true;
+      cell._prevValue = cell.value;
     });
 
-    /* --- IME 종료 (핵심 로직) --- */
+    cell.addEventListener("compositionupdate", (e) => {
+      const prev = cell._prevValue;
+      const curr = e.target.value;
+
+      // 핵심 케이스: "간" → "가나"
+      if (prev.length === 1 && curr.length === 2) {
+        const prefix = commonPrefix(prev, curr);
+        const rest = curr.slice(prefix.length);
+
+        if (prefix.length === 1 && rest.length === 1) {
+          cell.value = prefix;
+
+          const next = getNextCell(index);
+          if (next) {
+            next.value = rest;
+            next._prevValue = rest;
+            focusCell(next);
+          }
+        }
+      }
+
+      cell._prevValue = e.target.value;
+    });
+
     cell.addEventListener("compositionend", (e) => {
       isComposing = false;
-
-      const text = e.target.value;
-
-      // 정상적인 한 음절
-      if (text.length === 1) {
-        focusCell(getNextCell(index));
-        return;
-      }
-
-      // 👈 핵심 케이스: "가나"
-      if (text.length === 2) {
-        e.target.value = text[0];
-
-        const next = getNextCell(index);
-        if (next) {
-          next.value = text[1];
-          focusCell(next);
-        }
-        return;
-      }
-
-      // 붙여넣기 / 자동완성
-      if (text.length > 2) {
-        e.target.value = "";
-        distributeText(index, text);
-      }
+      cell._prevValue = "";
     });
 
-    /* --- 일반 input (영문/모바일 대비) --- */
-    cell.addEventListener("input", (e) => {
-      if (isComposing) return;
-
-      const text = e.target.value;
-
-      if (text.length === 1) {
-        focusCell(getNextCell(index));
-        return;
-      }
-
-      if (text.length > 1) {
-        e.target.value = "";
-        distributeText(index, text);
-      }
-    });
-
-    /* --- 키보드 이동 & 삭제 --- */
     cell.addEventListener("keydown", (e) => {
       if (isComposing) return;
 
       if (e.key === "Backspace") {
         if (cell.value === "") {
-          const prev = getPrevCell(index);
+          const prev = cells[index - 1];
           if (prev) {
             prev.value = "";
             focusCell(prev);
@@ -155,16 +113,6 @@
         } else {
           cell.value = "";
         }
-        e.preventDefault();
-      }
-
-      if (e.key === "ArrowRight") {
-        focusCell(getNextCell(index));
-        e.preventDefault();
-      }
-
-      if (e.key === "ArrowLeft") {
-        focusCell(getPrevCell(index));
         e.preventDefault();
       }
     });
