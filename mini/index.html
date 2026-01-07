@@ -67,6 +67,16 @@
 
 <h1>Mini Crossword</h1>
 <div class="grid" id="grid"></div>
+<div id="message" style="
+  margin-top: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c7be5;
+  display: none;
+">
+  🎉 축하드립니다, 오늘의 퍼즐을 해결했습니다!
+</div>
+
 
 <script>
 /* ===== 1. 퍼즐 데이터 ===== */
@@ -147,6 +157,12 @@ const userGrid = Array.from({ length: ROWS }, () =>
   }
   return true;
 }
+  const messageEl = document.getElementById('message');
+
+function showSolvedMessage() {
+  messageEl.style.display = 'block';
+}
+
 
 
 /* ===== 5. 유틸 ===== */
@@ -288,9 +304,8 @@ inputs.forEach(input => {
       userGrid[r][c] = e.key;   // ⭐ 핵심
 
       if (isPuzzleSolved()) {
-          alert("축하드립니다, 오늘의 퍼즐을 해결했습니다!");
+        showSolvedMessage();
       }
-      return;
     }
 
   
