@@ -56,6 +56,11 @@
     .cell.highlight input {
       background: #cfe3ff;
     }
+    
+    .cell.active input {
+      background: #8fb8ff;   /* 단어 하이라이트보다 진하게 */
+    }
+
   </style>
 </head>
 <body>
@@ -121,8 +126,18 @@ function clearHighlight() {
   cells.forEach(c => c.classList.remove('highlight'));
 }
 
+function clearActive() {
+  cells.forEach(cell => cell.classList.remove('active'));
+}
+
+function setActive(cellIndex) {
+  clearActive();
+  cells[cellIndex].classList.add('active');
+}
+
+
 function highlightWord(startIndex) {
-  clearHighlight();
+  clearHighlights();
 
   let row = Math.floor(startIndex / COLS);
   let col = startIndex % COLS;
@@ -140,7 +155,10 @@ function highlightWord(startIndex) {
       row++;
     }
   }
+
+  setActive(startIndex);   // ⭐ 현재 칸 강조
 }
+
 
 function moveFocus(fromIndex, dr, dc) {
   const r = Math.floor(fromIndex / COLS) + dr;
@@ -175,20 +193,48 @@ inputs.forEach(input => {
   });
 
   /* 키보드 */
-  input.addEventListener('keydown', e => {
-
-    /* 방향키 */
-    if (e.key.startsWith('Arrow')) {
-      e.preventDefault();
-      const idx = cellIndexFromInput(input);
-      focusedIndex = idx;
-
-      if (e.key === 'ArrowLeft')  { direction = 'across'; moveFocus(idx, 0, -1); }
-      if (e.key === 'ArrowRight') { direction = 'across'; moveFocus(idx, 0,  1); }
-      if (e.key === 'ArrowUp')    { direction = 'down';   moveFocus(idx, -1, 0); }
-      if (e.key === 'ArrowDown')  { direction = 'down';   moveFocus(idx,  1, 0); }
-      return;
+  input.addEventListener('keydown', (e) => {
+    if (!e.key.startsWith('Arrow')) return;
+  
+    e.preventDefault();
+  
+    const cellIndex = cells.indexOf(input.parentElement);
+  
+    let intendedDirection = direction;
+  
+    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      intendedDirection = 'down';
+    } else {
+      intendedDirection = 'across';
     }
+  
+    // ⭐ 1단계: 방향 전환만
+    if (intendedDirection !== direction) {
+      direction = intendedDirection;
+      highlightWord(cellIndex);
+      return;   // ❗ 이동 안 함
+    }
+  
+    // ⭐ 2단계: 같은 방향이면 이동
+    let r = Math.floor(cellIndex / COLS);
+    let c = cellIndex % COLS;
+  
+    if (e.key === 'ArrowRight') c++;
+    if (e.key === 'ArrowLeft') c--;
+    if (e.key === 'ArrowDown') r++;
+    if (e.key === 'ArrowUp') r--;
+  
+    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+    if (gridData[r][c] === 0) return;
+  
+    const nextIndex = r * COLS + c;
+    const nextInput = cells[nextIndex].querySelector('input');
+    if (!nextInput) return;
+  
+    nextInput.focus();
+    highlightWord(nextIndex);
+  });
+
 
     /* Backspace */
     if (e.key === 'Backspace') {
