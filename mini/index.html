@@ -104,31 +104,6 @@ const gridData = [
 const ROWS = 5;
 const COLS = 5;
 
-// block = null, 글자 = 문자열
-const solutionGrid = [
-  [null, null, "ㄱ", null, null],
-  [null, "ㅏ", "ㅏ", "ㅏ", null],
-  ["ㅂ", "ㅏ", "ㅂ", "ㅏ", "ㅂ"],
-  [null, "ㅏ", "ㅏ", "ㅏ", null],
-  [null, null, "ㄱ", null, null],
-];
-
-const userGrid = Array.from({ length: ROWS }, () =>
-  Array.from({ length: COLS }, () => null)
-);
-
-const CLUES = {
-  across: {
-    1: "가운데로 모인다",
-    4: "봄에 피는 꽃",
-  },
-  down: {
-    2: "하늘에서 내리는 것",
-    3: "시간을 재는 도구",
-  }
-};
-
-
 /* ===== 2. 상태 ===== */
 let direction = 'across';
 let focusedIndex = null;
@@ -165,7 +140,21 @@ gridData.forEach(row => {
 const cells = Array.from(document.querySelectorAll('.cell'));
 const inputs = Array.from(document.querySelectorAll('.cell input'));
 
-/* ===== 4.1. 채점 ===== */
+/* ===== 4.1. 절대 정답 및 유저 그리드 생성 ===== */
+// block = null, 글자 = 문자열
+const solutionGrid = [
+  [null, null, "ㄱ", null, null],
+  [null, "ㅏ", "ㅏ", "ㅏ", null],
+  ["ㅂ", "ㅏ", "ㅂ", "ㅏ", "ㅂ"],
+  [null, "ㅏ", "ㅏ", "ㅏ", null],
+  [null, null, "ㄱ", null, null],
+];
+
+const userGrid = Array.from({ length: ROWS }, () =>
+  Array.from({ length: COLS }, () => null)
+);
+
+/* ===== 4.2. 채점 ===== */
   function isCellCorrect(r, c) {
   if (gridData[r][c] === 0) return true; // block은 항상 OK
   return userGrid[r][c] === solutionGrid[r][c];
@@ -211,69 +200,6 @@ function showSolvedMessage() {
 
   document.getElementById('checkPuzzle')
   .addEventListener('click', checkPuzzle);
-
-  /* ===== 4.3. 단어 추출 ===== */
-  function extractWords() {
-  const words = [];
-  let number = 1;
-
-  for (let r = 0; r < ROWS; r++) {
-    for (let c = 0; c < COLS; c++) {
-      if (gridData[r][c] === 0) continue;
-
-      const idx = r * COLS + c;
-
-      /* across 시작 */
-      if (
-        (c === 0 || gridData[r][c - 1] === 0) &&
-        c + 1 < COLS && gridData[r][c + 1] === 1
-      ) {
-        const cells = [];
-        let cc = c;
-        while (cc < COLS && gridData[r][cc] === 1) {
-          cells.push(r * COLS + cc);
-          cc++;
-        }
-
-        words.push({
-          number,
-          direction: 'across',
-          startIndex: idx,
-          cells,
-          clue: '', // 나중에 채움
-        });
-
-        number++;
-      }
-
-      /* down 시작 */
-      if (
-        (r === 0 || gridData[r - 1][c] === 0) &&
-        r + 1 < ROWS && gridData[r + 1][c] === 1
-      ) {
-        const cells = [];
-        let rr = r;
-        while (rr < ROWS && gridData[rr][c] === 1) {
-          cells.push(rr * COLS + c);
-          rr++;
-        }
-
-        words.push({
-          number,
-          direction: 'down',
-          startIndex: idx,
-          cells,
-          clue: '',
-        });
-
-        number++;
-      }
-    }
-  }
-  return words;
-}
-
-const words = extractWords();
 
 
 
