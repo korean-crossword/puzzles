@@ -137,7 +137,7 @@ function setActive(cellIndex) {
 
 
 function highlightWord(startIndex) {
-  clearHighlights();
+  clearHighlight();
 
   let row = Math.floor(startIndex / COLS);
   let col = startIndex % COLS;
@@ -194,65 +194,60 @@ inputs.forEach(input => {
 
   /* 키보드 */
   input.addEventListener('keydown', (e) => {
-    if (!e.key.startsWith('Arrow')) return;
+
+    const cellIndex = cellIndexFromInput(input);
   
-    e.preventDefault();
+    /* ===== 방향키 ===== */
+    if (e.key.startsWith('Arrow')) {
+      e.preventDefault();
   
-    const cellIndex = cells.indexOf(input.parentElement);
+      let intendedDirection =
+        (e.key === 'ArrowUp' || e.key === 'ArrowDown') ? 'down' : 'across';
   
-    let intendedDirection = direction;
+      if (intendedDirection !== direction) {
+        direction = intendedDirection;
+        highlightWord(cellIndex);
+        return;
+      }
   
-    if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      intendedDirection = 'down';
-    } else {
-      intendedDirection = 'across';
+      let r = Math.floor(cellIndex / COLS);
+      let c = cellIndex % COLS;
+  
+      if (e.key === 'ArrowRight') c++;
+      if (e.key === 'ArrowLeft') c--;
+      if (e.key === 'ArrowDown') r++;
+      if (e.key === 'ArrowUp') r--;
+  
+      if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+      if (gridData[r][c] === 0) return;
+  
+      const nextIndex = r * COLS + c;
+      const nextInput = cells[nextIndex].querySelector('input');
+      if (!nextInput) return;
+  
+      nextInput.focus();
+      highlightWord(nextIndex);
+      return;
     }
   
-    // ⭐ 1단계: 방향 전환만
-    if (intendedDirection !== direction) {
-      direction = intendedDirection;
-      highlightWord(cellIndex);
-      return;   // ❗ 이동 안 함
-    }
-  
-    // ⭐ 2단계: 같은 방향이면 이동
-    let r = Math.floor(cellIndex / COLS);
-    let c = cellIndex % COLS;
-  
-    if (e.key === 'ArrowRight') c++;
-    if (e.key === 'ArrowLeft') c--;
-    if (e.key === 'ArrowDown') r++;
-    if (e.key === 'ArrowUp') r--;
-  
-    if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
-    if (gridData[r][c] === 0) return;
-  
-    const nextIndex = r * COLS + c;
-    const nextInput = cells[nextIndex].querySelector('input');
-    if (!nextInput) return;
-  
-    nextInput.focus();
-    highlightWord(nextIndex);
-
-
-
-    /* Backspace */
+    /* ===== Backspace ===== */
     if (e.key === 'Backspace') {
       e.preventDefault();
       input.value = '';
       return;
     }
-
-    /* 문자 입력 (화이트리스트) */
+  
+    /* ===== 문자 입력 ===== */
     if (ALLOWED_CHARS.includes(e.key)) {
       e.preventDefault();
-      input.value = e.key; // 항상 덮어쓰기
+      input.value = e.key;
       return;
     }
-
-    /* 그 외 모든 키 차단 */
+  
+    /* ===== 기타 키 차단 ===== */
     e.preventDefault();
   });
+
 });
 </script>
 
